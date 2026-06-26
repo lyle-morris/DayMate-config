@@ -12,6 +12,7 @@
       --muted: #b8b8b8;
       --border: #333333;
       --accent: #00aaff;
+      --success: #00ff88;
     }
 
     * { box-sizing: border-box; }
@@ -25,17 +26,8 @@
       line-height: 1.4;
     }
 
-    h1 {
-      margin: 0 0 4px;
-      font-size: 28px;
-      font-weight: 800;
-    }
-
-    .subtitle {
-      margin: 0 0 20px;
-      color: var(--muted);
-      font-size: 14px;
-    }
+    h1 { margin: 0 0 4px; font-size: 28px; font-weight: 800; }
+    .subtitle { margin: 0 0 20px; color: var(--muted); font-size: 14px; }
 
     .card {
       background: var(--card);
@@ -45,11 +37,7 @@
       margin-bottom: 16px;
     }
 
-    .section-title {
-      margin: 0 0 12px;
-      font-size: 16px;
-      font-weight: 700;
-    }
+    .section-title { margin: 0 0 12px; font-size: 16px; font-weight: 700; }
 
     label {
       display: block;
@@ -79,16 +67,9 @@
       margin-top: 12px;
     }
 
-    .toggle-copy {
-      color: var(--muted);
-      font-size: 14px;
-    }
+    .toggle-copy { color: var(--muted); font-size: 14px; }
 
-    input[type="checkbox"] {
-      width: 24px;
-      height: 24px;
-      accent-color: var(--accent);
-    }
+    input[type="checkbox"] { width: 24px; height: 24px; accent-color: var(--accent); }
 
     .preview {
       display: grid;
@@ -109,6 +90,15 @@
       text-align: center;
     }
 
+    #status {
+      min-height: 22px;
+      margin: 0 0 8px;
+      color: var(--success);
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+    }
+
     .actions {
       position: sticky;
       bottom: 0;
@@ -125,6 +115,7 @@
       color: #001018;
       font-size: 17px;
       font-weight: 800;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -182,7 +173,8 @@
   </div>
 
   <div class="actions">
-    <button id="save">Save Settings</button>
+    <div id="status"></div>
+    <button id="save" type="button">Save Settings</button>
   </div>
 
   <script>
@@ -204,11 +196,19 @@
       { value: 5, label: 'None' }
     ];
 
+    function mergeSettings(base, saved) {
+      var result = {};
+      var key;
+      for (key in base) result[key] = base[key];
+      if (saved) for (key in saved) result[key] = saved[key];
+      return result;
+    }
+
     function getQuerySettings() {
       var match = window.location.search.match(/[?&]settings=([^&]+)/);
       if (!match) return DEFAULT_SETTINGS;
       try {
-        return Object.assign({}, DEFAULT_SETTINGS, JSON.parse(decodeURIComponent(match[1])));
+        return mergeSettings(DEFAULT_SETTINGS, JSON.parse(decodeURIComponent(match[1])));
       } catch (e) {
         return DEFAULT_SETTINGS;
       }
@@ -216,15 +216,56 @@
 
     function populateMetricSelect(id) {
       var select = document.getElementById(id);
-      METRICS.forEach(function(metric) {
+      for (var i = 0; i < METRICS.length; i++) {
+        var metric = METRICS[i];
         var option = document.createElement('option');
         option.value = metric.value;
         option.textContent = metric.label;
         select.appendChild(option);
-      });
+      }
     }
 
-    ['slot_1_metric', 'slot_2_metric', 'slot_3_metric', 'slot_4_metric'].forEach(populateMetricSelect);
+    function readSettingsFromForm() {
+      return {
+        theme: Number(document.getElementById('theme').value),
+        slot_1_metric: Number(document.getElementById('slot_1_metric').value),
+        slot_2_metric: Number(document.getElementById('slot_2_metric').value),
+        slot_3_metric: Number(document.getElementById('slot_3_metric').value),
+        slot_4_metric: Number(document.getElementById('slot_4_metric').value),
+        show_leading_zero: document.getElementById('show_leading_zero').checked
+      };
+    }
+
+    function saveAndClose() {
+      var status = document.getElementById('status');
+      var button = document.getElementById('save');
+      var result = readSettingsFromForm();
+      var encoded = encodeURIComponent(JSON.stringify(result));
+      var closeUrl = 'pebblejs://close#' + encoded;
+
+      status.textContent = 'Saving…';
+      button.textContent = 'Saving…';
+      button.disabled = true;
+
+      setTimeout(function() {
+        window.location.href = closeUrl;
+      }, 50);
+
+      setTimeout(function() {
+        document.location = closeUrl;
+      }, 150);
+
+      setTimeout(function() {
+        status.textContent = 'Saved. If this window stays open in CloudPebble, close it and rerun the emulator.';
+        button.textContent = 'Save Settings';
+        button.disabled = false;
+      }, 800);
+    }
+
+    populateMetricSelect('slot_1_metric');
+    populateMetricSelect('slot_2_metric');
+    populateMetricSelect('slot_3_metric');
+    populateMetricSelect('slot_4_metric');
 
     var settings = getQuerySettings();
     document.getElementById('theme').value = Number(settings.theme);
@@ -234,18 +275,7 @@
     document.getElementById('slot_4_metric').value = Number(settings.slot_4_metric);
     document.getElementById('show_leading_zero').checked = !!settings.show_leading_zero;
 
-    document.getElementById('save').addEventListener('click', function() {
-      var result = {
-        theme: Number(document.getElementById('theme').value),
-        slot_1_metric: Number(document.getElementById('slot_1_metric').value),
-        slot_2_metric: Number(document.getElementById('slot_2_metric').value),
-        slot_3_metric: Number(document.getElementById('slot_3_metric').value),
-        slot_4_metric: Number(document.getElementById('slot_4_metric').value),
-        show_leading_zero: document.getElementById('show_leading_zero').checked
-      };
-
-      document.location = 'pebblejs://close#' + encodeURIComponent(JSON.stringify(result));
-    });
+    document.getElementById('save').onclick = saveAndClose;
   </script>
 </body>
 </html>
