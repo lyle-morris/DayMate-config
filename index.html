@@ -91,6 +91,7 @@
       gap: 12px;
     }
 
+    .toggle-row + .toggle-row { margin-top: 14px; }
     .toggle-copy { color: var(--muted); font-size: 14px; }
     input[type="checkbox"] { flex: 0 0 auto; width: 32px; height: 32px; accent-color: var(--accent); }
 
@@ -175,7 +176,7 @@
 </head>
 <body>
   <h1>DayPal</h1>
-  <p class="subtitle">Use the below settings to help customized your watchface.</p>
+  <p class="subtitle">Use the settings below to customize your watchface.</p>
 
   <div class="section">
     <p class="section-title">Themes</p>
@@ -201,6 +202,14 @@
     <button id="reset_layout" class="secondary-button" type="button">Reset layout</button>
   </div>
 
+  <div class="section">
+    <p class="section-title">Privacy</p>
+    <div class="toggle-row">
+      <div class="toggle-copy">Share anonymous usage analytics to help improve DayPal. No name, email, or location is sent.</div>
+      <input id="analytics_enabled" type="checkbox">
+    </div>
+  </div>
+
   <div class="actions">
     <div id="status"></div>
     <button id="save" type="button">Save settings</button>
@@ -213,7 +222,8 @@
       slot_2_metric: 1,
       slot_3_metric: 2,
       slot_4_metric: 4,
-      show_leading_zero: true
+      show_leading_zero: true,
+      analytics_enabled: true
     };
 
     var METRICS = [
@@ -296,7 +306,8 @@
         slot_2_metric: Number(document.getElementById('slot_2_metric').value),
         slot_3_metric: Number(document.getElementById('slot_3_metric').value),
         slot_4_metric: Number(document.getElementById('slot_4_metric').value),
-        show_leading_zero: document.getElementById('show_leading_zero').checked
+        show_leading_zero: document.getElementById('show_leading_zero').checked,
+        analytics_enabled: document.getElementById('analytics_enabled').checked
       };
     }
 
@@ -339,6 +350,7 @@
     document.getElementById('slot_3_metric').value = Number(settings.slot_3_metric);
     document.getElementById('slot_4_metric').value = Number(settings.slot_4_metric);
     document.getElementById('show_leading_zero').checked = !!settings.show_leading_zero;
+    document.getElementById('analytics_enabled').checked = settings.analytics_enabled !== false;
     document.getElementById('reset_layout').onclick = resetLayout;
     document.getElementById('save').onclick = saveAndClose;
   </script>
