@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>DayPal Location Testing</title>
+<style>
+:root{--bg:#000;--surface:#1d1d1d;--surface2:#111;--text:#fff;--muted:#bdbdbd;--border:#444;--focus:#00aaff;--ok:#00ff88;--warn:#ffcc55;--bad:#ff6655}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.35 Arial,sans-serif}.page{width:min(100%,720px);margin:auto;padding:16px}.banner{background:var(--focus);color:#000;font-weight:900;padding:8px 10px;margin-bottom:12px}.card{background:var(--surface);border:1px solid var(--border);padding:14px;margin:0 0 12px}h1{font-size:28px;margin:0 0 2px}h2{font-size:17px;margin:0 0 8px}.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}.test{background:#080808;border:1px solid var(--border);padding:10px;display:grid;gap:6px}.test b{font-size:15px}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}button{border:0;background:#555;color:#fff;min-height:36px;padding:0 12px;font-weight:800;cursor:pointer}.primary{background:var(--focus);color:#000}.ghost{background:#333}input,select{width:100%;min-height:38px;background:#050505;color:#fff;border:1px solid #555;padding:0 10px}.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px}.result{white-space:pre-wrap;background:#050505;border:1px solid #333;padding:10px;min-height:72px;overflow:auto}.ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}code{color:#8fdcff}.pill{display:inline-block;border:1px solid #555;background:#080808;padding:2px 6px;margin:2px 4px 2px 0}.small{font-size:12px}</style>
+</head>
+<body>
+<main class="page">
+<div class="banner">DEV LOCATION TESTING — DayPal 1.6.0</div>
+<h1>DayPal Location Testing</h1>
+<p class="muted">Use this page to test manual location inputs and weather-code mapping without waiting for Pebble's 15-minute location refresh interval.</p>
+<section class="card">
+<h2>Watch payload rules</h2>
+<p class="muted">PebbleKit JS sends <code>weather_temp</code> as key <code>10</code>, <code>weather_code</code> as key <code>11</code>, and <code>weather_valid</code> as key <code>12</code>. The watchface renders the numeric temperature only, with no degree symbol.</p>
+<div><span class="pill">0 Sunny</span><span class="pill">1 Partly cloudy</span><span class="pill">2 Rain</span><span class="pill">3 Storm</span><span class="pill">4 Snow</span><span class="pill">5 Fog</span><span class="pill">6 Cloudy</span><span class="pill">7 Unknown → unavailable</span></div>
+</section>
+<section class="card">
+<h2>Preset manual-location tests</h2>
+<div class="grid" id="presetGrid"></div>
+</section>
+<section class="card">
+<h2>Custom live test</h2>
+<div class="fields"><label>ZIP/postal code or city<input id="query" value="X0A 0H0"></label><label>Unit<select id="unit"><option value="fahrenheit">Fahrenheit</option><option value="celsius">Celsius</option></select></label></div>
+<p class="small muted">Canadian postal fallback intentionally trims full postal codes to FSA, so <code>X0A 0H0</code> tests the fallback behavior as <code>X0A</code>.</p>
+<div class="row"><button class="primary" id="runCustom">Run live lookup</button><button class="ghost" id="copyPayload">Copy last payload</button></div>
+</section>
+<section class="card">
+<h2>Mock weather-code tests</h2>
+<p class="muted">These do not call any API. They verify DayPal's Open-Meteo weather-code mapping.</p>
+<div class="grid" id="mockGrid"></div>
+</section>
+<section class="card">
+<h2>Result</h2>
+<div class="result" id="result">Ready.</div>
+</section>
+</main>
+<script>
+const PRESETS=[
+{name:'Louisville, KY',query:'Louisville',note:'Typical city search'},
+{name:'ZIP: Louisville',query:'40202',note:'US postal fallback'},
+{name:'Phoenix heat',query:'85004',note:'Hot weather'},
+{name:'Miami humidity',query:'33101',note:'Warm/rain-prone'},
+{name:'Seattle rain/clouds',query:'98101',note:'Cloud/rain path'},
+{name:'Anchorage cold',query:'99501',note:'Cold/snow-prone'},
+{name:'Utqiagvik, AK',query:'99723',note:'Extreme cold test'},
+{name:'Canadian Arctic',query:'X0A 0H0',note:'Canada postal fallback'},
+{name:'Invalid location',query:'ZZZZ-NOTREAL',note:'Unavailable path'}
+];
+const MOCKS=[
+{label:'Sunny',temp:100,code:0},{label:'Partly cloudy',temp:72,code:2},{label:'Cloudy',temp:55,code:3},{label:'Fog',temp:44,code:45},{label:'Rain/drizzle',temp:61,code:61},{label:'Snow',temp:18,code:71},{label:'Storm',temp:83,code:95},{label:'Unsupported',temp:70,code:999}
+];
+let lastPayload=null;
+function $(id){return document.getElementById(id)}
+function weatherCodeToCondition(code){if(code===0)return 0;if(code===1||code===2)return 1;if(code===3)return 6;if(code===45||code===48)return 5;if((code>=51&&code<=67)||(code>=80&&code<=82))return 2;if((code>=71&&code<=77)||code===85||code===86)return 4;if(code===95||code===96||code===99)return 3;return 7}
+function conditionName(c){return ['Sunny','Partly cloudy','Rain','Storm','Snow','Fog','Cloudy','Unknown'][c]||'Unknown'}
+function isCanadianPostalCode(q){return /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/.test(q)||/^[A-Za-z]\d[A-Za-z]$/.test(q)}
+function isUSPostalCode(q){return /^\d{5}(-\d{4})?$/.test(q)}
+function country(q){if(isCanadianPostalCode(q))return'ca';if(isUSPostalCode(q))return'us';return null}
+function postalFallback(q,c){let n=q.toUpperCase().replace(/\s+/g,'');return c==='ca'?n.substring(0,3):n.split('-')[0]}
+function out(text,cls){$('result').className='result '+(cls||'');$('result').textContent=text}
+function payload(temp,condition,valid,meta){lastPayload={10:temp,11:condition,12:valid?1:0,meta:meta||{}};return lastPayload}
+async function json(url){let r=await fetch(url);if(!r.ok)throw new Error('HTTP '+r.status+' for '+url);return r.json()}
+async function coordsFor(query){let geocode='https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(query)+'&count=1&language=en&format=json';try{let data=await json(geocode);if(data.results&&data.results.length)return{lat:data.results[0].latitude,lon:data.results[0].longitude,label:[data.results[0].name,data.results[0].admin1,data.results[0].country].filter(Boolean).join(', '),source:'Open-Meteo geocode'}}catch(e){}
+let c=country(query);if(!c)throw new Error('No geocode match and not a supported US/CA postal code.');let normalized=postalFallback(query,c);let z=await json('https://api.zippopotam.us/'+c+'/'+encodeURIComponent(normalized));if(!z.places||!z.places.length)throw new Error('Postal fallback returned no places.');return{lat:z.places[0].latitude,lon:z.places[0].longitude,label:[z.places[0]['place name'],z.places[0]['state'],z.country].filter(Boolean).join(', '),source:'Zippopotam.us '+c.toUpperCase()+' fallback: '+normalized}}
+async function runLive(query,unit){out('Resolving '+query+'…','warn');try{let loc=await coordsFor(query);let data=await json('https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(loc.lat)+'&longitude='+encodeURIComponent(loc.lon)+'&current=temperature_2m,weather_code&temperature_unit='+encodeURIComponent(unit));let current=data.current||{};let temp=Math.round(current.temperature_2m);let rawCode=Number(current.weather_code);let condition=weatherCodeToCondition(rawCode);if(condition===7){let p=payload(null,7,false,{query,unit,rawCode,location:loc});out('UNAVAILABLE\nUnsupported weather code '+rawCode+'\n\nPayload:\n'+JSON.stringify(p,null,2),'bad');return}let p=payload(temp,condition,true,{query,unit,rawCode,conditionName:conditionName(condition),location:loc});out('VALID\nLocation: '+loc.label+'\nSource: '+loc.source+'\nTemp sent to watch: '+temp+' ('+unit+')\nOpen-Meteo code: '+rawCode+' → DayPal condition '+condition+' '+conditionName(condition)+'\n\nPayload:\n'+JSON.stringify(p,null,2),'ok')}catch(e){let p=payload(null,7,false,{query,unit,error:String(e)});out('UNAVAILABLE\n'+e+'\n\nPayload:\n'+JSON.stringify(p,null,2),'bad')}}
+function renderPresets(){$('presetGrid').innerHTML=PRESETS.map((p,i)=>'<div class="test"><b>'+p.name+'</b><span class="muted">'+p.query+'</span><span class="small muted">'+p.note+'</span><div class="row"><button data-preset="'+i+'" data-unit="fahrenheit">°F</button><button data-preset="'+i+'" data-unit="celsius">°C</button></div></div>').join('');document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>runLive(PRESETS[+b.dataset.preset].query,b.dataset.unit))}
+function renderMocks(){$('mockGrid').innerHTML=MOCKS.map((m,i)=>'<div class="test"><b>'+m.label+'</b><span class="muted">Open-Meteo code '+m.code+'</span><button data-mock="'+i+'">Generate payload</button></div>').join('');document.querySelectorAll('[data-mock]').forEach(b=>b.onclick=()=>{let m=MOCKS[+b.dataset.mock],c=weatherCodeToCondition(m.code),valid=c!==7,p=payload(valid?m.temp:null,c,valid,{mock:true,rawCode:m.code,conditionName:conditionName(c)});out((valid?'VALID':'UNAVAILABLE')+'\nMock: '+m.label+'\nOpen-Meteo code: '+m.code+' → DayPal condition '+c+' '+conditionName(c)+'\n\nPayload:\n'+JSON.stringify(p,null,2),valid?'ok':'bad')})}
+$('runCustom').onclick=()=>runLive($('query').value.trim(),$('unit').value);
+$('copyPayload').onclick=async()=>{if(!lastPayload){out('No payload yet. Run a test first.','warn');return}try{await navigator.clipboard.writeText(JSON.stringify(lastPayload,null,2));out('Copied last payload:\n'+JSON.stringify(lastPayload,null,2),'ok')}catch(e){out('Copy failed. Last payload:\n'+JSON.stringify(lastPayload,null,2),'warn')}};
+renderPresets();renderMocks();
+</script>
+</body>
+</html>
