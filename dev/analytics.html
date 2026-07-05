@@ -3,65 +3,34 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>DayPal Analytics Dashboard</title>
+<title>DayPal Analytics</title>
 <style>
-:root{--bg:#000;--surface:#1d1d1d;--card:#101010;--text:#fff;--muted:#bdbdbd;--border:#444;--accent:#00aaff;--ok:#00ff88;--warn:#ffcc55;--bad:#ff6655}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 Arial,sans-serif}.page{width:min(100%,900px);margin:auto;padding:16px}.banner{background:var(--accent);color:#000;font-weight:900;padding:8px 10px;margin-bottom:12px}.card{background:var(--surface);border:1px solid var(--border);padding:14px;margin:0 0 12px}h1{font-size:28px;margin:0 0 2px}h2{font-size:17px;margin:0 0 8px}.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}.metric{background:var(--card);border:1px solid var(--border);padding:12px}.metric b{display:block;font-size:26px;margin-bottom:2px}.metric span{color:var(--muted);font-size:12px}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}button{border:0;background:#555;color:#fff;min-height:36px;padding:0 12px;font-weight:800;cursor:pointer}.primary{background:var(--accent);color:#000}.danger{background:#8c1d18}.pill{display:inline-block;border:1px solid #555;background:#080808;padding:2px 6px;margin:2px 4px 2px 0}.table-wrap{overflow:auto;border:1px solid var(--border)}table{width:100%;border-collapse:collapse;min-width:620px}th,td{border-bottom:1px solid #333;text-align:left;padding:8px;vertical-align:top}th{background:#080808;color:#fff}code{color:#8fdcff}.note{border-left:4px solid var(--warn);padding:8px 10px;background:#171200}.ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}.small{font-size:12px}</style>
+:root{--bg:#000;--surface:#1d1d1d;--card:#101010;--text:#fff;--muted:#bdbdbd;--border:#444;--accent:#00aaff;--ok:#00ff88;--warn:#ffcc55;--bad:#ff6655}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 Arial,sans-serif}.page{width:min(100%,980px);margin:auto;padding:16px}.banner{background:var(--accent);color:#000;font-weight:900;padding:8px 10px;margin-bottom:12px}h1{font-size:30px;margin:0 0 4px}.muted{color:var(--muted)}.card{background:var(--surface);border:1px solid var(--border);padding:14px;margin:0 0 12px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}.metric{background:var(--card);border:1px solid var(--border);padding:12px}.metric b{display:block;font-size:28px;margin-bottom:2px}.metric span{color:var(--muted);font-size:12px}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}button{border:0;background:var(--accent);color:#000;min-height:36px;padding:0 12px;font-weight:800;cursor:pointer}input{min-height:36px;background:#050505;color:#fff;border:1px solid #555;padding:0 10px;min-width:280px}.table-wrap{overflow:auto;border:1px solid var(--border)}table{width:100%;border-collapse:collapse;min-width:520px}th,td{border-bottom:1px solid #333;text-align:left;padding:8px}th{background:#080808}.warn{border-left:4px solid var(--warn);background:#171200}.small{font-size:12px}a{color:#8fdcff}</style>
 </head>
 <body>
 <main class="page">
 <div class="banner">DEV ANALYTICS — DayPal 1.6.0</div>
-<h1>DayPal Analytics Dashboard</h1>
-<p class="muted">This dashboard explains and tests the analytics model used by the static hosted config pages.</p>
-<section class="card note">
-<b>What this can and cannot measure</b>
-<p>This static dashboard reads analytics events saved in this browser's <code>localStorage</code>. It is useful for QA and for validating event names, but it is not a centralized production analytics service. Real cross-user totals require a backend endpoint or a hosted analytics provider.</p>
-</section>
-<section class="card">
-<h2>Definitions</h2>
-<p><span class="pill">Unique user</span> First known open from a browser/device identity.</p>
-<p><span class="pill">Repeat user</span> A later open from the same browser/device identity.</p>
-<p><span class="pill">Geolocation</span> Whether location mode is current device location or manual location. DayPal should not store exact GPS coordinates in analytics.</p>
-<p><span class="pill">Manual location</span> User enabled manual weather location by ZIP/postal code or city.</p>
-</section>
-<section class="card">
-<h2>Summary</h2>
-<div class="grid" id="summary"></div>
-</section>
-<section class="card">
-<h2>QA controls</h2>
-<p class="muted">Use these to generate understandable sample data before testing real config opens.</p>
-<div class="row"><button class="primary" id="seed">Seed sample analytics</button><button id="logOpen">Log config open</button><button id="logSaveManual">Log settings save: manual location</button><button id="logSaveGeo">Log settings save: geolocation</button><button class="danger" id="clear">Clear local analytics</button></div>
-</section>
-<section class="card">
-<h2>Event breakdown</h2>
-<div id="breakdown"></div>
-</section>
-<section class="card">
-<h2>Recent events</h2>
-<div class="table-wrap"><table><thead><tr><th>Time</th><th>Event</th><th>User type</th><th>Location mode</th><th>Details</th></tr></thead><tbody id="events"></tbody></table></div>
-</section>
+<h1>DayPal Analytics</h1>
+<p class="muted">Product-focused dashboard powered by GA4 through the DayPal Cloud Run analytics API.</p>
+<section class="card warn" id="setup"><b>API setup required</b><p>Deploy the Cloud Run API, then paste its service URL below. The URL is saved only in this browser.</p><div class="row"><input id="apiUrl" placeholder="https://daypal-analytics-api-...run.app"><button id="saveApi">Save API URL</button></div></section>
+<section class="card"><div class="row"><button id="refresh">Refresh</button><span class="muted small" id="status">Not loaded.</span></div></section>
+<section class="card"><h2>Summary</h2><div class="grid" id="summary"></div></section>
+<section class="card"><h2>Events</h2><div id="events"></div></section>
+<section class="card"><h2>Countries</h2><div id="countries"></div></section>
+<section class="card"><h2>Pages</h2><div id="pages"></div></section>
+<section class="card"><h2>Daily trend</h2><div class="table-wrap"><table><thead><tr><th>Date</th><th>Active users</th><th>Page views</th><th>Events</th></tr></thead><tbody id="daily"></tbody></table></div></section>
+<section class="card"><h2>Privacy model</h2><p class="muted">This dashboard uses aggregate GA4 data only. DayPal does not send ZIP/postal code, city, GPS coordinates, heart-rate data, battery percentage, weather values, or personal information.</p></section>
 </main>
 <script>
-const EVENT_KEYS=['daypal_analytics_events','daypal_qa_analytics_events'];
-const USER_KEY='daypal_analytics_user_id';
-const FIRST_KEY='daypal_analytics_first_open_at';
-const OPEN_COUNT_KEY='daypal_analytics_open_count';
+const API_KEY='daypal_analytics_api_url';
 function $(id){return document.getElementById(id)}
-function now(){return new Date().toISOString()}
-function readJson(key,fallback){try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch(e){return fallback}}
-function events(){let all=[];EVENT_KEYS.forEach(key=>{readJson(key,[]).forEach(e=>all.push(normalize(e,key)))});return all.sort((a,b)=>String(b.ts||b.timestamp).localeCompare(String(a.ts||a.timestamp)))}
-function normalize(e,key){let data=e.data||e;return{name:e.name||'unknown',ts:e.ts||e.timestamp||'',source:key,user_type:e.user_type||data.user_type||'',location_mode:data.manual_location===1||data.manual_location===true?'manual':data.manual_location===0||data.manual_location===false?'geolocation':data.location_mode||'',details:data}}
-function writeEvent(name,data){let list=readJson('daypal_analytics_events',[]);list.push(Object.assign({name:name,timestamp:now()},data||{}));localStorage.setItem('daypal_analytics_events',JSON.stringify(list.slice(-300)))}
-function identity(){let id=localStorage.getItem(USER_KEY),first=false;if(!id){id='daypal-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);localStorage.setItem(USER_KEY,id);localStorage.setItem(FIRST_KEY,now());first=true}let count=Number(localStorage.getItem(OPEN_COUNT_KEY)||0)+1;localStorage.setItem(OPEN_COUNT_KEY,String(count));return{user_id:id,user_type:first?'unique':'repeat',open_count:count,first_open_at:localStorage.getItem(FIRST_KEY)}}
-function countBy(list,fn){let m={};list.forEach(x=>{let k=fn(x)||'unspecified';m[k]=(m[k]||0)+1});return m}
-function renderMap(map){return Object.keys(map).sort().map(k=>'<span class="pill">'+k+': '+map[k]+'</span>').join('')||'<span class="muted">No data yet.</span>'}
-function render(){let list=events();let opens=list.filter(e=>e.name==='config_opened').length;let saves=list.filter(e=>e.name==='settings_saved').length;let manualSaves=list.filter(e=>e.name==='settings_saved'&&e.location_mode==='manual').length;let geoSaves=list.filter(e=>e.name==='settings_saved'&&e.location_mode==='geolocation').length;let uniqueOpens=list.filter(e=>e.user_type==='unique').length;let repeatOpens=list.filter(e=>e.user_type==='repeat'||e.user_type==='returning').length;$('summary').innerHTML=[['Total events',list.length],['Config opens',opens],['Settings saves',saves],['Unique opens',uniqueOpens],['Repeat opens',repeatOpens],['Manual location saves',manualSaves],['Geolocation saves',geoSaves]].map(m=>'<div class="metric"><b>'+m[1]+'</b><span>'+m[0]+'</span></div>').join('');$('breakdown').innerHTML='<p><b>Events:</b> '+renderMap(countBy(list,e=>e.name))+'</p><p><b>User type:</b> '+renderMap(countBy(list,e=>e.user_type))+'</p><p><b>Location mode:</b> '+renderMap(countBy(list,e=>e.location_mode))+'</p>';$('events').innerHTML=list.slice(0,50).map(e=>'<tr><td>'+e.ts+'</td><td>'+e.name+'</td><td>'+e.user_type+'</td><td>'+e.location_mode+'</td><td><code>'+JSON.stringify(e.details)+'</code></td></tr>').join('')||'<tr><td colspan="5" class="muted">No analytics events found in this browser yet.</td></tr>'}
-$('seed').onclick=()=>{localStorage.removeItem(USER_KEY);localStorage.removeItem(OPEN_COUNT_KEY);let a=identity();writeEvent('config_opened',a);writeEvent('settings_saved',{manual_location:1,use_celsius:0,theme:0,reverse_theme:0,user_type:a.user_type});let b=identity();writeEvent('config_opened',b);writeEvent('settings_saved',{manual_location:0,use_celsius:1,theme:1,reverse_theme:1,user_type:b.user_type});writeEvent('donation_clicked',{user_type:b.user_type});render()};
-$('logOpen').onclick=()=>{writeEvent('config_opened',identity());render()};
-$('logSaveManual').onclick=()=>{writeEvent('settings_saved',{manual_location:1,use_celsius:0,theme:0,reverse_theme:0,user_type:'repeat'});render()};
-$('logSaveGeo').onclick=()=>{writeEvent('settings_saved',{manual_location:0,use_celsius:1,theme:1,reverse_theme:1,user_type:'repeat'});render()};
-$('clear').onclick=()=>{EVENT_KEYS.forEach(k=>localStorage.removeItem(k));localStorage.removeItem(USER_KEY);localStorage.removeItem(FIRST_KEY);localStorage.removeItem(OPEN_COUNT_KEY);render()};
-render();
+function fmt(n){return Number(n||0).toLocaleString()}
+function apiBase(){return (localStorage.getItem(API_KEY)||'').replace(/\/$/,'')}
+function setStatus(msg){$('status').textContent=msg}
+function table(rows,cols){return '<div class="table-wrap"><table><thead><tr>'+cols.map(c=>'<th>'+c.label+'</th>').join('')+'</tr></thead><tbody>'+((rows||[]).map(r=>'<tr>'+cols.map(c=>'<td>'+c.value(r)+'</td>').join('')+'</tr>').join('')||'<tr><td colspan="'+cols.length+'" class="muted">No data yet.</td></tr>')+'</tbody></table></div>'}
+function render(data){let s=data.summary||{};$('summary').innerHTML=[['Active users',s.active_users],['New users',s.new_users],['Returning estimate',s.returning_users_estimate],['Sessions',s.sessions],['Page views',s.page_views],['Events',s.event_count]].map(m=>'<div class="metric"><b>'+fmt(m[1])+'</b><span>'+m[0]+'</span></div>').join('');$('events').innerHTML=table(data.events,[{label:'Event',value:r=>r.name},{label:'Count',value:r=>fmt(r.count)}]);$('countries').innerHTML=table(data.countries,[{label:'Country',value:r=>r.country},{label:'Active users',value:r=>fmt(r.active_users)}]);$('pages').innerHTML=table(data.pages,[{label:'Path',value:r=>r.path},{label:'Views',value:r=>fmt(r.views)}]);$('daily').innerHTML=(data.daily||[]).map(r=>'<tr><td>'+r.date+'</td><td>'+fmt(r.active_users)+'</td><td>'+fmt(r.page_views)+'</td><td>'+fmt(r.event_count)+'</td></tr>').join('')||'<tr><td colspan="4" class="muted">No trend data yet.</td></tr>';$('setup').style.display='none';setStatus('Loaded '+(data.cached?'from cache':'fresh')+' at '+new Date(data.generated_at||Date.now()).toLocaleString())}
+async function load(){let base=apiBase();$('apiUrl').value=base;if(!base){setStatus('Paste the Cloud Run API URL to connect the dashboard.');return}setStatus('Loading...');try{let res=await fetch(base+'/api/daypal-analytics',{cache:'no-store'});if(!res.ok)throw new Error('HTTP '+res.status);render(await res.json())}catch(e){setStatus('Unable to load analytics: '+e.message)}}
+$('saveApi').onclick=()=>{localStorage.setItem(API_KEY,$('apiUrl').value.trim());load()};$('refresh').onclick=load;load();
 </script>
 </body>
 </html>
